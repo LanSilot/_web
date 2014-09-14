@@ -9,20 +9,30 @@ $(function() {
         var mousePos = [];
         var mouseDown = false;
 
+        var play;
+        var pause;
+        var stop;
+
+        var isGame = true;
+
         this.run = function() {
             init();
 
             setInterval(function() {
-                clearDisplay();
 
-                if(mouseDown) {
-                    arrow(mousePos['downX'], mousePos['downY'], mousePos['currentX'], mousePos['currentY']);
+                if (isGame) {
+                    clearDisplay();
+
+                    if(mouseDown) {
+                        arrow(mousePos['downX'], mousePos['downY'], mousePos['currentX'], mousePos['currentY']);
+                    }
+
+                    frame.update(this.canvas, this.context);
+                    frame.draw(this.context);
+
+                    physics.updateCross(frame.balls, frame.walls);
                 }
 
-                frame.update(this.canvas, this.context);
-                frame.draw(this.context);
-
-                physics.updateCross(frame.balls, frame.walls);
             }, 0.1);
         };
 
@@ -31,31 +41,55 @@ $(function() {
             this.context = this.canvas.getContext("2d");
 
             this.canvas.onmousedown = function(e) {
-                mouseDown = true;
-                mousePos['downX'] = e.pageX;
-                mousePos['downY'] = e.pageY;
+                if (isGame) {
+                    mouseDown = true;
+                    mousePos['downX'] = e.pageX;
+                    mousePos['downY'] = e.pageY;
+                }
             };
 
             this.canvas.onmousemove = function(e) {
-                mousePos['currentX'] = e.pageX;
-                mousePos['currentY'] = e.pageY;
+                if (isGame) {
+                    mousePos['currentX'] = e.pageX;
+                    mousePos['currentY'] = e.pageY;
+                }
             };
 
             this.canvas.onmouseup = function(e) {
-                mouseDown = false;
-                if (frame == null) frame = new Frame();
+                if (isGame) {
+                    mouseDown = false;
+                    if (frame == null) frame = new Frame();
 
-                if(e.button == 0) {
-                    frame.addBall(mousePos['downX'], mousePos['downY'], (e.pageX - mousePos['downX']), (e.pageY - mousePos['downY']), 30);
-                }
+                    if(e.button == 0) {
+                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.pageX - mousePos['downX']), (e.pageY - mousePos['downY']), 30);
+                    }
 
-                if(e.button == 2) {
-                    frame.addWall(mousePos['downX'], mousePos['downY'], e.pageX, e.pageY);
+                    if(e.button == 2) {
+                        frame.addWall(mousePos['downX'], mousePos['downY'], e.pageX, e.pageY);
+                    }
                 }
             };
 
             mousePos = [];
             mouseDown = false;
+
+            play = $('#play');
+            pause = $('#pause');
+            stop = $('#stop');
+
+            play.click(function() {
+                isGame = true;
+            });
+
+            pause.click(function() {
+                isGame = false;
+            });
+
+            stop.click(function() {
+                isGame = false;
+                clearDisplay();
+                frame = new Frame();
+            });
         };
 
         var clearDisplay = function() {
@@ -186,10 +220,46 @@ $(function() {
                 for (var j = 0; j < balls.length; j++) {
                     if (collisionBallsAndWalls(walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2,
                         balls[j].positionX, balls[j].positionY, balls[j].radius)) {
-                        RectCircleColliding(balls[j], walls[i]);
+
+                        //func(balls[j], walls[i]);
+
+                        balls[j].velosityX *= -1;
+                        balls[j].velosityY *= -1;
                     }
                 }
             }
+        }
+
+        var func = function(ball, wall) {
+            var vector = new vec2d(ball.positionX - wall.positionX1, ball.positionY - wall.positionY1);
+            var vector2 = new vec2d(wall.positionX2 - wall.positionX1, wall.positionY2 - wall.positionY1);
+            var mag = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+            var vector3 = new vec2d(((vector.x * vector2.x) + (vector.y * vector2.y)) / mag, ((vector.x * (-1) * vector2.y) + (vector.y * vector2.x)) / mag);
+
+            if (Math.abs(vector3.y) > ball.radius)
+                return;
+
+            if (vector3.x < 0)
+                return;
+
+            if(vector3.x > Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y))
+                return;
+
+            var velosity = new vec2d(ball.velosityX, ball.velosityY);
+            var vector4 = new vec2d(((velosity.x * vector2.x) + (velosity.y * vector2.y)) / mag, ((velosity.x * (-1) * vector2.y) + (velosity.y * vector2.x)) / mag);
+
+            if (vector4.sign() == vector3.sign())
+                return;
+
+            var vTemp = new vec2d(vector4.x, (-1) * vector4.y);
+            var magTemp = vector2.x * vector2.x + vector2.y * vector2.y;
+            var vector5 = new vec2d(((vTemp.x * vector2.x) + (vTemp.y * vector2.y)) / magTemp, ((vTemp.x * (-1) * vector2.y) + (vTemp.y * vector2.x)) / magTemp);
+
+            var sx = vector5.x / Math.abs(vector5.x);
+            var sy = vector5.y / Math.abs(vector5.y);
+
+            ball.velosityX *= sx;
+            ball.velosityY *= sy;
         }
 
         var collisionBalls = function (ball1, ball2){
@@ -252,40 +322,21 @@ $(function() {
 
             return (a+b+c < 0);
         }
+    }
 
-        function RectCircleColliding(ball, wall) {
-            var A = Math.sqrt(Math.pow(ball.positionX - wall.positionX1, 2) + Math.pow(ball.positionY - wall.positionY1, 2));
-            var B = Math.sqrt(Math.pow(ball.positionX - wall.positionX2, 2) + Math.pow(ball.positionY - wall.positionY2, 2));
+    function vec2d(x, y) {
+        this.x = x;
+        this.y = y;
 
-            var C1 = Math.pow(A, 2) - Math.pow(ball.radius, 2);
-            var C2 = Math.pow(B, 2) - Math.pow(ball.radius, 2);
-
-            var alpha = Math.cos(C1 / A);
-            var beta = Math.cos(C2 / B);
-
-            A = Math.sqrt(Math.pow(ball.positionX + 3 - wall.positionX1, 2) + Math.pow(ball.positionY + 3 - wall.positionY1, 2));
-            B = Math.sqrt(Math.pow(ball.positionX + 3 - wall.positionX2, 2) + Math.pow(ball.positionY + 3 - wall.positionY2, 2));
-
-            C1 = Math.pow(A, 2) - Math.pow(ball.radius, 2);
-            C2 = Math.pow(B, 2) - Math.pow(ball.radius, 2);
-
-            var alphaNext = Math.cos(C1 / A);
-            var betaNext = Math.cos(C2 / B);
-
-            if(alpha > alphaNext && beta > betaNext) {
-                ball.velosityX *= -1;
-                ball.velosityY *= -1;
-                return;
+        this.sign = function() {
+            if (this.y == 0) {
+                return 0;
             }
 
-            if(alpha > alphaNext) {
-                ball.velosityX *= -1;
-                return;
-            }
-
-            if(beta > betaNext) {
-                ball.velosityY *= -1;
-                return;
+            if(this.y > 0) {
+                return 1;
+            } else {
+                return -1;
             }
         }
     }
