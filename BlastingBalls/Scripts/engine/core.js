@@ -186,14 +186,7 @@ $(function() {
                 for (var j = 0; j < balls.length; j++) {
                     if (collisionBallsAndWalls(walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2,
                         balls[j].positionX, balls[j].positionY, balls[j].radius)) {
-
-                        if (balls[j].positionX + balls[j].radius > walls[i].positionX1 && balls[j].positionY + balls[j].radius > walls[i].positionY1) {
-                            balls[j].velosityX *= -1;
-                        }
-
-                        if (balls[j].positionX + balls[j].radius > walls[i].positionX2 && balls[j].positionY + balls[j].radius > walls[i].positionY2) {
-                            balls[j].velosityY *= -1;
-                        }
+                        RectCircleColliding(balls[j], walls[i]);
                     }
                 }
             }
@@ -258,6 +251,42 @@ $(function() {
                 return ((4*a*c - b*b) < 0);
 
             return (a+b+c < 0);
+        }
+
+        function RectCircleColliding(ball, wall) {
+            var A = Math.sqrt(Math.pow(ball.positionX - wall.positionX1, 2) + Math.pow(ball.positionY - wall.positionY1, 2));
+            var B = Math.sqrt(Math.pow(ball.positionX - wall.positionX2, 2) + Math.pow(ball.positionY - wall.positionY2, 2));
+
+            var C1 = Math.pow(A, 2) - Math.pow(ball.radius, 2);
+            var C2 = Math.pow(B, 2) - Math.pow(ball.radius, 2);
+
+            var alpha = Math.cos(C1 / A);
+            var beta = Math.cos(C2 / B);
+
+            A = Math.sqrt(Math.pow(ball.positionX + 3 - wall.positionX1, 2) + Math.pow(ball.positionY + 3 - wall.positionY1, 2));
+            B = Math.sqrt(Math.pow(ball.positionX + 3 - wall.positionX2, 2) + Math.pow(ball.positionY + 3 - wall.positionY2, 2));
+
+            C1 = Math.pow(A, 2) - Math.pow(ball.radius, 2);
+            C2 = Math.pow(B, 2) - Math.pow(ball.radius, 2);
+
+            var alphaNext = Math.cos(C1 / A);
+            var betaNext = Math.cos(C2 / B);
+
+            if(alpha > alphaNext && beta > betaNext) {
+                ball.velosityX *= -1;
+                ball.velosityY *= -1;
+                return;
+            }
+
+            if(alpha > alphaNext) {
+                ball.velosityX *= -1;
+                return;
+            }
+
+            if(beta > betaNext) {
+                ball.velosityY *= -1;
+                return;
+            }
         }
     }
 
