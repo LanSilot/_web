@@ -33,7 +33,7 @@ $(function() {
                     physics.updateCross(frame.balls, frame.walls);
                 }
 
-            }, 0.1);
+            }, 0.001);
         };
 
         var init = function() {
@@ -41,24 +41,25 @@ $(function() {
             this.context = this.canvas.getContext("2d");
 
             this.canvas.onmousedown = function(e) {
-                e.preventDefault();
                 if (isGame) {
                     mouseDown = true;
                     mousePos['downX'] = e.offsetX;
                     mousePos['downY'] = e.offsetY;
                 }
+
+                e.preventDefault();
             };
 
             this.canvas.onmousemove = function(e) {
-                e.preventDefault();
                 if (isGame) {
                     mousePos['currentX'] = e.offsetX;
                     mousePos['currentY'] = e.offsetY;
                 }
+
+                e.preventDefault();
             };
 
             this.canvas.onmouseout = function(e) {
-                e.preventDefault();
                 if (isGame) {
                     mouseDown = false;
                     if (frame == null) frame = new Frame();
@@ -71,10 +72,11 @@ $(function() {
                         frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
                     }
                 }
+
+                e.preventDefault();
             }
 
             this.canvas.onmouseup = function(e) {
-                e.preventDefault();
                 if (isGame) {
                     mouseDown = false;
                     if (frame == null) frame = new Frame();
@@ -87,6 +89,8 @@ $(function() {
                         frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
                     }
                 }
+
+                e.preventDefault();
             };
 
             mousePos = [];
@@ -285,38 +289,69 @@ $(function() {
             var dX = ball1.positionX - ball2.positionX;
             var dY = ball1.positionY - ball2.positionY;
 
-            var disnance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
-            if (disnance <= (ball1.radius + ball2.radius)){
-                if (disnance < (ball1.radius + ball2.radius)){
+            var distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
+            if (distance+1 < (ball1.radius + ball2.radius)){
+                if (distance+1 < (ball1.radius + ball2.radius)){
                     if (ball1.positionX < ball2.positionX){
-                        ball1.positionX--;
-                        ball2.positionX++;
+
+                        if(ball1.velosityX>0 & ball2.velosityX>=0){
+                            ball1.velosityX *=-1;
+                        } else
+                        if (ball1.velosityX<=0 & ball2.velosityX<0){
+                            ball2.velosityX *=-1;
+                        } else
+                        if(ball1.velosityX>0 & ball2.velosityX<0){
+                            ball1.velosityX *=-1;
+                            ball2.velosityX *=-1;
+                        }
+
+
                     }
                     else if (ball1.positionX > ball2.positionX){
-                        ball1.positionX++;
-                        ball2.positionX--;
+
+                        if(ball1.velosityX>=0 & ball2.velosityX>0){
+                            ball2.velosityX *=-1;
+                        } else
+                        if (ball2.velosityX<=0 & ball1.velosityX<0){
+                            ball1.velosityX *=-1;
+                        } else
+                        if(ball2.velosityX>0 & ball1.velosityX<0){
+                            ball1.velosityX *=-1;
+                            ball2.velosityX *=-1;
+                        }
                     }
                 }
 
-                if (disnance < (ball1.radius + ball2.radius)){
+                if (distance+1 < (ball1.radius + ball2.radius)){
                     if (ball1.positionY < ball2.positionY){
-                        ball1.positionY--;
-                        ball2.positionY++;
+
+                        if(ball1.velosityY>0 & ball2.velosityY>=0){
+                            ball1.velosityY *=-1;
+                        } else
+                        if (ball1.velosityY<=0 & ball2.velosityY<0){
+                            ball2.velosityY *=-1;
+                        } else
+                        if(ball1.velosityY>0 & ball2.velosityY<0){
+                            ball1.velosityY *=-1;
+                            ball2.velosityY *=-1;
+                        }
+
                     }
                     else if ( ball1.positionY > ball2.positionY){
-                        ball1.positionY++;
-                        ball2.positionY--;
+
+                        if(ball1.velosityY>=0 & ball2.velosityY>0){
+                            ball2.velosityY *=-1;
+                        } else
+                        if (ball2.velosityY<=0 & ball1.velosityY<0){
+                            ball1.velosityY *=-1;
+                        } else
+                        if(ball2.velosityY>0 & ball1.velosityY<0){
+                            ball1.velosityY *=-1;
+                            ball2.velosityY *=-1;
+                        }
+
                     }
                 }
-
-                var objVx = ball1.velosityX;
-                var objVy = ball1.velosityY;
-
-                ball1.velosityX = ball2.velosityX;
-                ball2.velosityX = objVx;
-
-                ball1.velosityY = ball2.velosityY;
-                ball2.velosityY = objVy;
             }
         }
 
