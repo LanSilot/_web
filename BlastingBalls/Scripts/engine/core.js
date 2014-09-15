@@ -7,13 +7,13 @@ $(function() {
         var physics = new Physics();
 
         var mousePos = [];
-        var mouseDown = false;
+        var isGame = true;
+        var isAddElement = false;
+        var isMouseDown = false;
 
         var play;
         var pause;
         var stop;
-
-        var isGame = true;
 
         this.run = function() {
             init();
@@ -23,7 +23,7 @@ $(function() {
                 if (isGame) {
                     clearDisplay();
 
-                    if(mouseDown) {
+                    if(isMouseDown && isAddElement) {
                         arrow(mousePos['downX'], mousePos['downY'], mousePos['currentX'], mousePos['currentY']);
                     }
 
@@ -42,7 +42,9 @@ $(function() {
 
             this.canvas.onmousedown = function(e) {
                 if (isGame) {
-                    mouseDown = true;
+                    mousePos = [];
+                    isMouseDown = true;
+                    isAddElement = true;
                     mousePos['downX'] = e.offsetX;
                     mousePos['downY'] = e.offsetY;
                 }
@@ -51,7 +53,7 @@ $(function() {
             };
 
             this.canvas.onmousemove = function(e) {
-                if (isGame) {
+                if (isGame && isAddElement) {
                     mousePos['currentX'] = e.offsetX;
                     mousePos['currentY'] = e.offsetY;
                 }
@@ -60,12 +62,13 @@ $(function() {
             };
 
             this.canvas.onmouseout = function(e) {
-                if (isGame) {
-                    mouseDown = false;
+                if (isGame && isAddElement) {
+                    isMouseDown = false;
+                    isAddElement = false;
                     if (frame == null) frame = new Frame();
 
                     if(e.button == 0) {
-                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.pageX - mousePos['downX']), (e.pageY - mousePos['downY']), 30);
+                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.offsetX - mousePos['downX']), (e.offsetY - mousePos['downY']), 30);
                     }
 
                     if(e.button == 2) {
@@ -77,12 +80,13 @@ $(function() {
             }
 
             this.canvas.onmouseup = function(e) {
-                if (isGame) {
-                    mouseDown = false;
+                if (isGame && isAddElement) {
+                    isMouseDown = false;
+                    isAddElement = false;
                     if (frame == null) frame = new Frame();
 
                     if(e.button == 0) {
-                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.pageX - mousePos['downX']), (e.pageY - mousePos['downY']), 30);
+                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.offsetX - mousePos['downX']), (e.offsetY - mousePos['downY']), 30);
                     }
 
                     if(e.button == 2) {
@@ -94,7 +98,8 @@ $(function() {
             };
 
             mousePos = [];
-            mouseDown = false;
+            isMouseDown = false;
+            isAddElement = false;
 
             play = $('#play');
             pause = $('#pause');
@@ -129,7 +134,6 @@ $(function() {
             this.context.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
             this.context.moveTo(toX, toY);
             this.context.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
-
             this.context.lineWidth = 3;
             this.context.strokeStyle = "red";
             this.context.lineCap = "round";
