@@ -1,4 +1,4 @@
-$(function() {
+$(function () {
     function Application() {
         this.canvas = null;
         this.context = null;
@@ -10,20 +10,18 @@ $(function() {
         var isGame = true;
         var isAddElement = false;
         var isMouseDown = false;
+        var isBall = true;
+        var isWall = false;
 
-        var play;
-        var pause;
-        var stop;
-
-        this.run = function() {
+        this.run = function () {
             init();
 
-            setInterval(function() {
+            setInterval(function () {
 
                 if (isGame) {
                     clearDisplay();
 
-                    if(isMouseDown && isAddElement) {
+                    if (isMouseDown && isAddElement) {
                         arrow(mousePos['downX'], mousePos['downY'], mousePos['currentX'], mousePos['currentY']);
                     }
 
@@ -36,11 +34,11 @@ $(function() {
             }, 0.001);
         };
 
-        var init = function() {
+        var init = function () {
             this.canvas = document.getElementById("display");
             this.context = this.canvas.getContext("2d");
 
-            this.canvas.onmousedown = function(e) {
+            this.canvas.onmousedown = function (e) {
                 if (isGame) {
                     mousePos = [];
                     isMouseDown = true;
@@ -52,7 +50,7 @@ $(function() {
                 e.preventDefault();
             };
 
-            this.canvas.onmousemove = function(e) {
+            this.canvas.onmousemove = function (e) {
                 if (isGame && isAddElement) {
                     mousePos['currentX'] = e.offsetX;
                     mousePos['currentY'] = e.offsetY;
@@ -61,17 +59,17 @@ $(function() {
                 e.preventDefault();
             };
 
-            this.canvas.onmouseout = function(e) {
+            this.canvas.onmouseout = function (e) {
                 if (isGame && isAddElement) {
                     isMouseDown = false;
                     isAddElement = false;
                     if (frame == null) frame = new Frame();
 
-                    if(e.button == 0) {
+                    if (isBall) {
                         frame.addBall(mousePos['downX'], mousePos['downY'], (e.offsetX - mousePos['downX']), (e.offsetY - mousePos['downY']), 30);
                     }
 
-                    if(e.button == 2) {
+                    if (isWall) {
                         frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
                     }
                 }
@@ -79,17 +77,17 @@ $(function() {
                 e.preventDefault();
             }
 
-            this.canvas.onmouseup = function(e) {
+            this.canvas.onmouseup = function (e) {
                 if (isGame && isAddElement) {
                     isMouseDown = false;
                     isAddElement = false;
                     if (frame == null) frame = new Frame();
 
-                    if(e.button == 0) {
+                    if (isBall) {
                         frame.addBall(mousePos['downX'], mousePos['downY'], (e.offsetX - mousePos['downX']), (e.offsetY - mousePos['downY']), 30);
                     }
 
-                    if(e.button == 2) {
+                    if (isWall) {
                         frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
                     }
                 }
@@ -101,30 +99,58 @@ $(function() {
             isMouseDown = false;
             isAddElement = false;
 
-            play = $('#play');
-            pause = $('#pause');
-            stop = $('#stop');
-
-            play.click(function() {
+            $('#play').click(function () {
                 isGame = true;
+
+                $('#play').attr('disabled','disabled');
+                $('#pause').removeAttr('disabled');
+                $('#stop').removeAttr('disabled');
             });
 
-            pause.click(function() {
+            $('#pause').click(function () {
                 isGame = false;
+
+                $('#play').removeAttr('disabled');
+                $('#pause').attr('disabled','disabled');
+                $('#stop').removeAttr('disabled');
             });
 
-            stop.click(function() {
+            $('#stop').click(function () {
                 clearDisplay();
                 frame = new Frame();
-                isGame = true;
+                isGame = false;
+
+                $('#play').removeAttr('disabled');
+                $('#pause').attr('disabled','disabled');
+                $('#stop').attr('disabled','disabled');
+            });
+
+            $('#drawBall').click(function (e) {
+                isBall = true;
+                isWall = false;
+
+                $('#drawBall').attr('disabled','disabled');
+                $('#drawWall').removeAttr('disabled');
+
+                e.preventDefault();
+            });
+
+            $('#drawWall').click(function (e) {
+                isWall = true;
+                isBall = false;
+
+                $('#drawWall').attr('disabled','disabled');
+                $('#drawBall').removeAttr('disabled');
+
+                e.preventDefault();
             });
         };
 
-        var clearDisplay = function() {
+        var clearDisplay = function () {
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         };
 
-        var arrow = function(fromX, fromY, toX, toY) {
+        var arrow = function (fromX, fromY, toX, toY) {
             var headlen = 10;
             var angle = Math.atan2(toY - fromY, toX - fromX);
 
@@ -140,7 +166,7 @@ $(function() {
             this.context.stroke();
         }
 
-        document.addEventListener("contextmenu", function(event){
+        document.addEventListener("contextmenu", function (event) {
             event.preventDefault();
         });
     }
@@ -149,13 +175,13 @@ $(function() {
         this.balls = [];
         this.walls = [];
 
-        this.update = function(canvas, context) {
+        this.update = function (canvas, context) {
             for (var i = 0; i < this.balls.length; i++) {
                 this.balls[i].update(canvas, context);
             }
         };
 
-        this.draw = function(context) {
+        this.draw = function (context) {
             for (var i = 0; i < this.balls.length; i++) {
                 this.balls[i].draw(context);
             }
@@ -165,12 +191,12 @@ $(function() {
             }
         };
 
-        this.addBall = function(positionX, positionY, velosityX, velosityY, radius) {
+        this.addBall = function (positionX, positionY, velosityX, velosityY, radius) {
             if (this.balls == null) this.balls = [];
             this.balls.push(new Ball(positionX, positionY, velosityX, velosityY, radius));
         };
 
-        this.addWall = function(positionX1, positionY1, positionX2, positionY2) {
+        this.addWall = function (positionX1, positionY1, positionX2, positionY2) {
             if (this.walls == null) this.walls = [];
             this.walls.push(new Wall(positionX1, positionY1, positionX2, positionY2));
         };
@@ -183,7 +209,7 @@ $(function() {
         this.velosityY = velosityY;
         this.radius = radius;
 
-        this.update = function(canvas, context) {
+        this.update = function (canvas, context) {
             this.positionX += this.velosityX * 0.01;
             this.positionY += this.velosityY * 0.01;
 
@@ -208,7 +234,7 @@ $(function() {
             }
         };
 
-        this.draw = function(context) {
+        this.draw = function (context) {
             context.beginPath();
             context.arc(this.positionX, this.positionY, this.radius, 0, 2 * Math.PI);
             context.fillStyle = "red";
@@ -225,7 +251,7 @@ $(function() {
         this.positionX2 = positionX2;
         this.positionY2 = positionY2;
 
-        this.draw = function(context) {
+        this.draw = function (context) {
             context.beginPath();
             context.moveTo(this.positionX1, this.positionY1);
             context.lineTo(this.positionX2, this.positionY2);
@@ -248,12 +274,10 @@ $(function() {
                     if (collisionBallsAndWalls(walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2,
                         balls[j].positionX, balls[j].positionY, balls[j].radius)) {
 
-                        var tempSpeed = GetNewVector1(balls[j].positionX, balls[j].positionY, balls[j].velosityX, balls[j].velosityY, walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2);
+                        var tempSpeed = GetNewVector1(balls[j].positionX, balls[j].positionY, balls[j].velosityX, balls[j].velosityY,
+                            walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2);
                         balls[j].velosityX = tempSpeed.x;
                         balls[j].velosityY = tempSpeed.y;
-
-//                        balls[j].velosityX *= -1;
-//                        balls[j].velosityY *= -1;
                     }
                 }
             }
@@ -261,7 +285,7 @@ $(function() {
 
         var GetNewVector = function (Vx, Vy, Vx2, Vy2) {
             var ln, nn, r, rez, rez2;
-            ln = Vx * Vx2+Vy * Vy2;
+            ln = Vx * Vx2 + Vy * Vy2;
             nn = Vx2 * Vx2 + Vy2 * Vy2;
             nn = nn == 0 ? 1 : nn;
             rez = ln / nn;
@@ -289,71 +313,54 @@ $(function() {
             return r;
         };
 
-        var collisionBalls = function (ball1, ball2){
+        var collisionBalls = function (ball1, ball2) {
             var dX = ball1.positionX - ball2.positionX;
             var dY = ball1.positionY - ball2.positionY;
 
             var distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
-            if (distance+1 < (ball1.radius + ball2.radius)){
-                if (distance+1 < (ball1.radius + ball2.radius)){
-                    if (ball1.positionX < ball2.positionX){
-
-                        if(ball1.velosityX>0 & ball2.velosityX>=0){
-                            ball1.velosityX *=-1;
-                        } else
-                        if (ball1.velosityX<=0 & ball2.velosityX<0){
-                            ball2.velosityX *=-1;
-                        } else
-                        if(ball1.velosityX>0 & ball2.velosityX<0){
-                            ball1.velosityX *=-1;
-                            ball2.velosityX *=-1;
+            if (distance + 1 < (ball1.radius + ball2.radius)) {
+                if (distance + 1 < (ball1.radius + ball2.radius)) {
+                    if (ball1.positionX < ball2.positionX) {
+                        if (ball1.velosityX > 0 & ball2.velosityX >= 0) {
+                            ball1.velosityX *= -1;
+                        } else if (ball1.velosityX <= 0 & ball2.velosityX < 0) {
+                            ball2.velosityX *= -1;
+                        } else if (ball1.velosityX > 0 & ball2.velosityX < 0) {
+                            ball1.velosityX *= -1;
+                            ball2.velosityX *= -1;
                         }
-
-
-                    }
-                    else if (ball1.positionX > ball2.positionX){
-
-                        if(ball1.velosityX>=0 & ball2.velosityX>0){
-                            ball2.velosityX *=-1;
-                        } else
-                        if (ball2.velosityX<=0 & ball1.velosityX<0){
-                            ball1.velosityX *=-1;
-                        } else
-                        if(ball2.velosityX>0 & ball1.velosityX<0){
-                            ball1.velosityX *=-1;
-                            ball2.velosityX *=-1;
+                    } else if (ball1.positionX > ball2.positionX) {
+                        if (ball1.velosityX >= 0 & ball2.velosityX > 0) {
+                            ball2.velosityX *= -1;
+                        } else if (ball2.velosityX <= 0 & ball1.velosityX < 0) {
+                            ball1.velosityX *= -1;
+                        } else if (ball2.velosityX > 0 & ball1.velosityX < 0) {
+                            ball1.velosityX *= -1;
+                            ball2.velosityX *= -1;
                         }
                     }
                 }
 
-                if (distance+1 < (ball1.radius + ball2.radius)){
-                    if (ball1.positionY < ball2.positionY){
-
-                        if(ball1.velosityY>0 & ball2.velosityY>=0){
-                            ball1.velosityY *=-1;
-                        } else
-                        if (ball1.velosityY<=0 & ball2.velosityY<0){
-                            ball2.velosityY *=-1;
-                        } else
-                        if(ball1.velosityY>0 & ball2.velosityY<0){
-                            ball1.velosityY *=-1;
-                            ball2.velosityY *=-1;
+                if (distance + 1 < (ball1.radius + ball2.radius)) {
+                    if (ball1.positionY < ball2.positionY) {
+                        if (ball1.velosityY > 0 & ball2.velosityY >= 0) {
+                            ball1.velosityY *= -1;
+                        } else if (ball1.velosityY <= 0 & ball2.velosityY < 0) {
+                            ball2.velosityY *= -1;
+                        } else if (ball1.velosityY > 0 & ball2.velosityY < 0) {
+                            ball1.velosityY *= -1;
+                            ball2.velosityY *= -1;
                         }
-
                     }
-                    else if ( ball1.positionY > ball2.positionY){
-
-                        if(ball1.velosityY>=0 & ball2.velosityY>0){
-                            ball2.velosityY *=-1;
-                        } else
-                        if (ball2.velosityY<=0 & ball1.velosityY<0){
-                            ball1.velosityY *=-1;
-                        } else
-                        if(ball2.velosityY>0 & ball1.velosityY<0){
-                            ball1.velosityY *=-1;
-                            ball2.velosityY *=-1;
+                    else if (ball1.positionY > ball2.positionY) {
+                        if (ball1.velosityY >= 0 & ball2.velosityY > 0) {
+                            ball2.velosityY *= -1;
+                        } else if (ball2.velosityY <= 0 & ball1.velosityY < 0) {
+                            ball1.velosityY *= -1;
+                        } else if (ball2.velosityY > 0 & ball1.velosityY < 0) {
+                            ball1.velosityY *= -1;
+                            ball2.velosityY *= -1;
                         }
-
                     }
                 }
             }
@@ -368,17 +375,17 @@ $(function() {
             var dx = positionX2 - positionX1;
             var dy = positionY2 - positionY1;
 
-            var a = dx*dx + dy*dy;
-            var b = 2*(positionX1*dx + positionY1*dy);
+            var a = dx * dx + dy * dy;
+            var b = 2 * (positionX1 * dx + positionY1 * dy);
             var c = positionX1 * positionX1 + positionY1 * positionY1 - radiusCircle * radiusCircle;
 
             if (-b < 0)
                 return (c < 0);
 
-            if (-b < (2*a))
-                return ((4*a*c - b*b) < 0);
+            if (-b < (2 * a))
+                return ((4 * a * c - b * b) < 0);
 
-            return (a+b+c < 0);
+            return (a + b + c < 0);
         }
     }
 

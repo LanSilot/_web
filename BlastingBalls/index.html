@@ -3,17 +3,30 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Blasting Balls Game</title>
-
+    <link type="text/css" rel="stylesheet" href="Content/bootstrap3/css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="Content/bootstrap3/css/bootstrap-theme.css"/>
     <link type="text/css" rel="stylesheet" href="Content/css/styles.css" />
 </head>
 <body>
     <canvas id="display" width="1350" height="600"></canvas>
     <br />
-    <button type="button" id="play" style="font-size: 18px">Play</button>
-    <button type="button" id="pause" style="font-size: 18px">Pause</button>
-    <button type="button" id="stop" style="font-size: 18px">Clear</button>
+
+    <div class="container center-block">
+        <div class="row">
+            <div class="btn-group">
+                <input type="button" id="play" value="Play" class="btn btn-success" disabled="disabled" />
+                <input type="button" id="pause" value="Pause" class="btn btn-success" />
+                <input type="button" id="stop" value="Stop" class="btn btn-success" />
+            </div>
+            <div class="btn-group">
+                <input type="button" id="drawBall" value="Ball" class="btn btn-success" disabled="disabled" />
+                <input type="button" id="drawWall" value="Wall" class="btn btn-success" />
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript" src="Scripts/jquery-1.11.1.js"></script>
+    <script type="text/javascript" src="Content/bootstrap3/js/bootstrap.js"></script>
     <script type="text/javascript" src="Scripts/engine/core.js"></script>
 </body>
 </html>
