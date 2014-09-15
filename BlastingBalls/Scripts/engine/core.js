@@ -41,21 +41,24 @@ $(function() {
             this.context = this.canvas.getContext("2d");
 
             this.canvas.onmousedown = function(e) {
+                e.preventDefault();
                 if (isGame) {
                     mouseDown = true;
-                    mousePos['downX'] = e.pageX;
-                    mousePos['downY'] = e.pageY;
+                    mousePos['downX'] = e.offsetX;
+                    mousePos['downY'] = e.offsetY;
                 }
             };
 
             this.canvas.onmousemove = function(e) {
+                e.preventDefault();
                 if (isGame) {
-                    mousePos['currentX'] = e.pageX;
-                    mousePos['currentY'] = e.pageY;
+                    mousePos['currentX'] = e.offsetX;
+                    mousePos['currentY'] = e.offsetY;
                 }
             };
 
-            this.canvas.onmouseup = function(e) {
+            this.canvas.onmouseout = function(e) {
+                e.preventDefault();
                 if (isGame) {
                     mouseDown = false;
                     if (frame == null) frame = new Frame();
@@ -65,7 +68,23 @@ $(function() {
                     }
 
                     if(e.button == 2) {
-                        frame.addWall(mousePos['downX'], mousePos['downY'], e.pageX, e.pageY);
+                        frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
+                    }
+                }
+            }
+
+            this.canvas.onmouseup = function(e) {
+                e.preventDefault();
+                if (isGame) {
+                    mouseDown = false;
+                    if (frame == null) frame = new Frame();
+
+                    if(e.button == 0) {
+                        frame.addBall(mousePos['downX'], mousePos['downY'], (e.pageX - mousePos['downX']), (e.pageY - mousePos['downY']), 30);
+                    }
+
+                    if(e.button == 2) {
+                        frame.addWall(mousePos['downX'], mousePos['downY'], e.offsetX, e.offsetY);
                     }
                 }
             };
@@ -86,9 +105,9 @@ $(function() {
             });
 
             stop.click(function() {
-                isGame = false;
                 clearDisplay();
                 frame = new Frame();
+                isGame = true;
             });
         };
 
@@ -221,46 +240,46 @@ $(function() {
                     if (collisionBallsAndWalls(walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2,
                         balls[j].positionX, balls[j].positionY, balls[j].radius)) {
 
-                        //func(balls[j], walls[i]);
+                        var tempSpeed = GetNewVector1(balls[j].positionX, balls[j].positionY, balls[j].velosityX, balls[j].velosityY, walls[i].positionX1, walls[i].positionY1, walls[i].positionX2, walls[i].positionY2);
+                        balls[j].velosityX = tempSpeed.x;
+                        balls[j].velosityY = tempSpeed.y;
 
-                        balls[j].velosityX *= -1;
-                        balls[j].velosityY *= -1;
+//                        balls[j].velosityX *= -1;
+//                        balls[j].velosityY *= -1;
                     }
                 }
             }
         }
 
-        var func = function(ball, wall) {
-            var vector = new vec2d(ball.positionX - wall.positionX1, ball.positionY - wall.positionY1);
-            var vector2 = new vec2d(wall.positionX2 - wall.positionX1, wall.positionY2 - wall.positionY1);
-            var mag = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
-            var vector3 = new vec2d(((vector.x * vector2.x) + (vector.y * vector2.y)) / mag, ((vector.x * (-1) * vector2.y) + (vector.y * vector2.x)) / mag);
+        var GetNewVector = function (Vx, Vy, Vx2, Vy2) {
+            var ln, nn, r, rez, rez2;
+            ln = Vx * Vx2+Vy * Vy2;
+            nn = Vx2 * Vx2 + Vy2 * Vy2;
+            nn = nn == 0 ? 1 : nn;
+            rez = ln / nn;
+            rez2 = {
+                x: 2 * Vx2 * rez,
+                y: 2 * Vy2 * rez
+            };
+            r = {
+                x: Vx - rez2.x,
+                y: Vy - rez2.y
+            };
+            return r;
+        };
 
-            if (Math.abs(vector3.y) > ball.radius)
-                return;
-
-            if (vector3.x < 0)
-                return;
-
-            if(vector3.x > Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y))
-                return;
-
-            var velosity = new vec2d(ball.velosityX, ball.velosityY);
-            var vector4 = new vec2d(((velosity.x * vector2.x) + (velosity.y * vector2.y)) / mag, ((velosity.x * (-1) * vector2.y) + (velosity.y * vector2.x)) / mag);
-
-            if (vector4.sign() == vector3.sign())
-                return;
-
-            var vTemp = new vec2d(vector4.x, (-1) * vector4.y);
-            var magTemp = vector2.x * vector2.x + vector2.y * vector2.y;
-            var vector5 = new vec2d(((vTemp.x * vector2.x) + (vTemp.y * vector2.y)) / magTemp, ((vTemp.x * (-1) * vector2.y) + (vTemp.y * vector2.x)) / magTemp);
-
-            var sx = vector5.x / Math.abs(vector5.x);
-            var sy = vector5.y / Math.abs(vector5.y);
-
-            ball.velosityX *= sx;
-            ball.velosityY *= sy;
-        }
+        var GetNewVector1 = function (x, y, Mx, My, x1, y1, x2, y2) {
+            var r;
+            if (Math.abs(x - x1) < 10 && Math.abs(y - y1) < 10 || Math.abs(x - x2) < 10 && Math.abs(y - y2) < 10) {
+                r = {
+                    x: -Mx,
+                    y: -My
+                };
+                return r;
+            }
+            r = GetNewVector(Mx, My, y1 - y2, x2 - x1);
+            return r;
+        };
 
         var collisionBalls = function (ball1, ball2){
             var dX = ball1.positionX - ball2.positionX;
@@ -321,23 +340,6 @@ $(function() {
                 return ((4*a*c - b*b) < 0);
 
             return (a+b+c < 0);
-        }
-    }
-
-    function vec2d(x, y) {
-        this.x = x;
-        this.y = y;
-
-        this.sign = function() {
-            if (this.y == 0) {
-                return 0;
-            }
-
-            if(this.y > 0) {
-                return 1;
-            } else {
-                return -1;
-            }
         }
     }
 
